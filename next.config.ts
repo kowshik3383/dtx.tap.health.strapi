@@ -48,15 +48,41 @@ const nextConfig: NextConfig = {
         hostname: 'storage.googleapis.com',
       },
     ],
+    // ✅ Serve modern formats by default
+    formats: ['image/avif', 'image/webp'],
   },
 
-  // ✅ Modern optimizations
+  // ✅ React & compilation optimizations
   reactStrictMode: true,
   swcMinify: true,
 
-  // ✅ Drop old browser support without TS errors
+  // ✅ Drop old browser support + tree-shaking
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
+    styledComponents: true, // if you use styled-components
+  },
+
+  // ✅ Experimental performance flags
+  experimental: {
+    optimizeCss: true, // uses Critters to inline critical CSS
+    optimizePackageImports: ['lucide-react'], // auto-tree-shake icons/libs
+    scrollRestoration: true, // improves client transitions
+  },
+
+  // ✅ Static file caching & compression
+  poweredByHeader: false, // hide "X-Powered-By"
+  compress: true, // enable gzip compression
+  httpAgentOptions: {
+    keepAlive: true, // keep connections warm for fetch()
+  },
+
+  // ✅ Future-proof asset handling
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // reduce polyfills, don't include unnecessary node libs
+      config.resolve.fallback = { fs: false, net: false, tls: false };
+    }
+    return config;
   },
 };
 
@@ -74,7 +100,6 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
   tunnelRoute: '/monitoring',
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
