@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { Partytown } from '@qwik.dev/partytown/react';
@@ -5,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { Urbanist } from 'next/font/google';
 import { usePathname } from 'next/navigation';
 import './globals.css';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 import AnalyticsProvider from '@/components/AnalyticsProvider';
@@ -13,25 +14,18 @@ import RouteTracker from '@/components/v2/RouteTracker';
 import TimeSpentEventTracker from '@/components/v2/TimeSpentEventTracker';
 import { AuthProvider } from '@/hooks/useAuth';
 
-// Defer heavy tracking scripts to reduce TBT and layout shift
-const ThirdPartyScripts = dynamic(
-	() => import('@/components/ThirdPartyScripts'),
-	{
-		ssr: false,
-		loading: () => null,
-	},
-);
-const GoogleTagManagerNoscript = dynamic(
-	() => import('@/components/GoogleTagManagerNoscript'),
-	{ ssr: false },
-);
-
+// ✅ Fonts: no preload (let swap handle first paint)
 const urbanist = Urbanist({
 	subsets: ['latin'],
 	weight: ['400', '600', '700', '800'],
 	display: 'swap',
-	preload: true,
 });
+
+// ✅ Defer 3rd-party stuff until after hydration
+const GoogleTagManagerNoscript = dynamic(
+	() => import('@/components/GoogleTagManagerNoscript'),
+	{ ssr: false },
+);
 
 export default function RootLayout({
 	children,
@@ -55,14 +49,28 @@ export default function RootLayout({
 		'/v8',
 	].includes(pathname);
 
+	// ✅ Lazy-load ThirdPartyScripts only on client + after hydration
+	const [loadThirdParty, setLoadThirdParty] = useState(false);
+	useEffect(() => {
+		if ('requestIdleCallback' in window) {
+			(requestIdleCallback as any)(() => setLoadThirdParty(true));
+		} else {
+			setTimeout(() => setLoadThirdParty(true), 1500);
+		}
+	}, []);
+
+	const ThirdPartyScripts = loadThirdParty
+		? dynamic(() => import('@/components/ThirdPartyScripts'), {
+				ssr: false,
+				loading: () => null,
+		  })
+		: null;
+
 	return (
 		<html lang="en">
 			<head>
 				<title>Tap Health | AI Health Assistant</title>
-				<meta
-					name="viewport"
-					content="width=device-width, initial-scale=1"
-				/>
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta
 					name="description"
 					content="Tap Health is your personal AI health assistant. Track symptoms, receive instant advice, and simplify your health journey with ease."
@@ -73,9 +81,11 @@ export default function RootLayout({
 				/>
 				<link rel="shortcut icon" href="/favicon-32x32.png" />
 				<link rel="manifest" href="/site.webmanifest" />
+
+				{/* ✅ Put Partytown last in head so it doesn’t block meta parsing */}
 				<Partytown debug={false} forward={['dataLayer.push', 'fbq']} />
 
-				{/* Improve font load speed */}
+				{/* ✅ Font connections: keep them but non-blocking */}
 				<link
 					rel="preconnect"
 					href="https://fonts.googleapis.com"
@@ -86,10 +96,6 @@ export default function RootLayout({
 					href="https://fonts.gstatic.com"
 					crossOrigin="anonymous"
 				/>
-				{/* <script
-					crossOrigin="anonymous"
-					src="//unpkg.com/react-scan/dist/auto.global.js"
-				/> */}
 			</head>
 			<body className={urbanist.className}>
 				<div
@@ -97,7 +103,8 @@ export default function RootLayout({
 						isVersion
 							? 'bg-white'
 							: 'relative mx-auto min-h-screen max-w-[430px] overflow-hidden bg-white shadow-xl'
-					}>
+					}
+				>
 					<Toaster position="top-center" />
 					<Suspense fallback={null}>
 						<AuthProvider>
@@ -108,8 +115,10 @@ export default function RootLayout({
 							</AnalyticsProvider>
 						</AuthProvider>
 					</Suspense>
-					<ThirdPartyScripts />
+					{/* ✅ Only load third-party scripts *after* hydration + idle */}
+					{ThirdPartyScripts && <ThirdPartyScripts />}
 				</div>
+				{/* ✅ Load GTM noscript at very end of body */}
 				<GoogleTagManagerNoscript />
 			</body>
 		</html>

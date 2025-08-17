@@ -86,6 +86,8 @@ const ActionButton: React.FC<ActionButtonProps> = ({
 					transform: 'translate(-50%, -50%) rotate(-63deg)',
 					animation: 'moveShine 3s infinite linear',
 					zIndex: 1,
+					willChange: 'transform', // prevent reflow jank
+
 				},
 
 				'@keyframes moveShine': {
