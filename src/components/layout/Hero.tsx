@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { components } from '@/types/strapi';
 
 export default function Hero({
@@ -13,6 +13,8 @@ export default function Hero({
 	hero_image,
 	partnerLogo,
 }: components['schemas']['DynamicZoneHeroComponent']) {
+	const [imageLoaded, setImageLoaded] = useState(false);
+
 	useEffect(() => {
 		console.log('🔥 Hero component mounted');
 		if (hero_image?.url) console.log('🖼️ Hero image URL:', hero_image.url);
@@ -77,18 +79,32 @@ export default function Hero({
 					</div>
 				</motion.div>
 
-				{/* LCP-Critical Hero Image */}
+				{/* LCP-Critical Hero Image + Skeleton Loader */}
 				{hero_image?.url && (
 					<div className="absolute right-0 -bottom-20 z-10">
 						<div className="relative h-[340px] w-[220px] md:h-[420px] md:w-[300px]">
+
+							{/* Skeleton loader */}
+							{!imageLoaded && (
+								<motion.div
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									exit={{ opacity: 0 }}
+									className="absolute inset-0 rounded-xl bg-gray-200 animate-pulse"
+								/>
+							)}
+
 							<Image
 								src={hero_image.url}
 								alt="Hero Image - Man holding phone"
 								fill
-								className="object-cover"
+								className={`object-cover transition-opacity duration-700 ${
+									imageLoaded ? 'opacity-100' : 'opacity-0'
+								}`}
 								priority
 								sizes="(max-width: 768px) 220px, 300px"
 								fetchPriority="high"
+								onLoadingComplete={() => setImageLoaded(true)}
 							/>
 						</div>
 					</div>
