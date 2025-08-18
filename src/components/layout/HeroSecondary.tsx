@@ -94,29 +94,21 @@ const HeroSecondary = ({
 
 			{/* Person Image */}
 			{image?.url && (
-				<div className="absolute right-0 bottom-0 left-0 z-10 h-[75%]">
-					<div className="relative flex h-full w-full items-end justify-center">
-
-
-
-						<Image
-							src={image.url}
-							alt="Hero Image - Man holding phone"
-							width={300}
-							height={420}
-							className="object-cover"
-							priority
-							placeholder="blur"
-							blurDataURL="/images/hero-blur.jpg"
-							sizes="(max-width: 768px) 220px, 300px"
-						/>
-
-					</div>
-
-
-
+				<div className="relative w-[300px] h-[420px] mx-auto z-10">
+					<Image
+						src={optimisedImageUrl(image)}
+						alt="Hero Image - Man holding phone"
+						width={300}
+						height={420}
+						className="object-cover"
+						priority // LCP-critical
+						sizes="(max-width: 768px) 220px, 300px"
+						decoding="sync" // decode immediately for faster paint
+					/>
 				</div>
 			)}
+
+
 		</div>
 	);
 };
