@@ -61,9 +61,9 @@ export default function RootLayout({
 
 	const ThirdPartyScripts = loadThirdParty
 		? dynamic(() => import('@/components/ThirdPartyScripts'), {
-				ssr: false,
-				loading: () => null,
-		  })
+			ssr: false,
+			loading: () => null,
+		})
 		: null;
 
 	return (
@@ -83,7 +83,12 @@ export default function RootLayout({
 				<link rel="manifest" href="/site.webmanifest" />
 
 				{/* ✅ Put Partytown last in head so it doesn’t block meta parsing */}
-				<Partytown debug={false} forward={['dataLayer.push', 'fbq']} />
+				<Partytown debug={false} forward={[
+					'dataLayer.push', // GTM
+					'gtag',           // GA4
+					'fbq',            // Facebook Pixel
+					'clarity',        // Microsoft Clarity
+				]} />
 
 				{/* ✅ Font connections: keep them but non-blocking */}
 				<link
