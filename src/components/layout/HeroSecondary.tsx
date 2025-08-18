@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { optimisedImageUrl } from '@/lib/strapi/optimisedImage';
 import { components } from '@/types/strapi';
 
@@ -19,7 +19,6 @@ const HeroSecondary = ({
 	isLandscape,
 	image,
 }: components['schemas']['DynamicZoneHero1Component']) => {
-	const [imageLoaded, setImageLoaded] = useState(false);
 
 	const firstLine = titlePrimary || line1;
 	const secondLine = titleSecondary || line2;
@@ -98,29 +97,24 @@ const HeroSecondary = ({
 				<div className="absolute right-0 bottom-0 left-0 z-10 h-[75%]">
 					<div className="relative flex h-full w-full items-end justify-center">
 
-						{/* Skeleton loader */}
-						{!imageLoaded && (
-							<motion.div
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								className="absolute bottom-0 h-[90%] w-[85%] rounded-xl bg-gray-200 animate-pulse"
-							/>
-						)}
+
 
 						<Image
 							src={image.url}
 							alt="Hero Image - Man holding phone"
 							width={300}
-							height={400}
-							className={`max-h-[90%] max-w-[85%] object-contain transition-opacity duration-700 ${
-								imageLoaded ? 'opacity-100' : 'opacity-0'
-							}`}
-							sizes="(max-width: 768px) 100vw, 400px"
+							height={420}
+							className="object-cover"
 							priority
-							fetchPriority="high"
-							onLoadingComplete={() => setImageLoaded(true)}
+							placeholder="blur"
+							blurDataURL="/images/hero-blur.jpg"
+							sizes="(max-width: 768px) 220px, 300px"
 						/>
+
 					</div>
+
+
+
 				</div>
 			)}
 		</div>
