@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { optimisedImageUrl } from '@/lib/strapi/optimisedImage';
 import { components } from '@/types/strapi';
 
@@ -19,11 +19,14 @@ const HeroSecondary = ({
 	isLandscape,
 	image,
 }: components['schemas']['DynamicZoneHero1Component']) => {
+	const [imageLoaded, setImageLoaded] = useState(false);
+
 	const firstLine = titlePrimary || line1;
 	const secondLine = titleSecondary || line2;
 	const hasMultiLineTitle = useMemo(() => firstLine && secondLine, [firstLine, secondLine]);
 
-	const baseTitleClass = 'mb-2 text-3xl md:text-4xl leading-tight font-bold text-gray-900';
+	const baseTitleClass =
+		'mb-2 text-3xl md:text-4xl leading-tight font-bold text-gray-900';
 	const transition = { duration: 0.3, ease: 'easeOut' };
 
 	const containerHeight = useMemo(() => {
@@ -94,15 +97,28 @@ const HeroSecondary = ({
 			{image?.url && (
 				<div className="absolute right-0 bottom-0 left-0 z-10 h-[75%]">
 					<div className="relative flex h-full w-full items-end justify-center">
+
+						{/* Skeleton loader */}
+						{!imageLoaded && (
+							<motion.div
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								className="absolute bottom-0 h-[90%] w-[85%] rounded-xl bg-gray-200 animate-pulse"
+							/>
+						)}
+
 						<Image
 							src={image.url}
 							alt="Hero Image - Man holding phone"
 							width={300}
 							height={400}
-							className="max-h-[90%] max-w-[85%] object-contain"
+							className={`max-h-[90%] max-w-[85%] object-contain transition-opacity duration-700 ${
+								imageLoaded ? 'opacity-100' : 'opacity-0'
+							}`}
 							sizes="(max-width: 768px) 100vw, 400px"
 							priority
-fetchPriority="high"
+							fetchPriority="high"
+							onLoadingComplete={() => setImageLoaded(true)}
 						/>
 					</div>
 				</div>
